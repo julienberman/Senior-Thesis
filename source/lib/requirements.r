@@ -1,1 +1,23 @@
-install.packages("dplyr")
+install.packages(c(
+    "car",
+    "caret",
+    "CVXR",
+    "formula.tools"
+    "GGally",
+    "ggplot2",
+    "ggrepel",
+    "glmnet",
+    "gridExtra",
+    "leaflet",
+    "lubridate",
+    "maps",
+    "modelsummary",
+    "plotly",
+    "readxl",
+    "sf",
+    "shiny",
+    "stargazer",
+    "tidyverse",
+    "usmap",
+    "zoo"
+))

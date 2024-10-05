@@ -1,11 +1,3 @@
----
-title: "candidates_cleaning"
-author: "Julien Berman"
-date: "2024-09-25"
-output: html_document
----
-
-```{r setup, include=FALSE}
 # Load libraries.
 ## install via `install.packages("name")`
 library(ggplot2)
@@ -31,13 +23,10 @@ library(CVXR)
 library(glmnet)
 library(stats)
 library(formula.tools)
-```
 
-```{r, echo=FALSE, warning=FALSE, message = FALSE}
+
 # Load dataset
 df <- read_csv("data/candidates-final.csv")
-```
-```{r, echo=FALSE, warning=FALSE, message = FALSE}
 columns = c("race_id", "year", "race", "race_type", "primary", "statedistrict", "name", "party", "status", "unopposed", "votes", "totalvotes", "win", "share_male", "share_white", "share_black", "share_hisp")
 
 df %>% 
@@ -71,22 +60,3 @@ df %>%
   View()
 
 colnames(df)
-```
-
-
-```{r, echo=FALSE, warning=FALSE, message = FALSE}
-
-```
-
-```{r, echo=FALSE, warning=FALSE, message = FALSE}
-
-```
-
-```{r, echo=FALSE, warning=FALSE, message = FALSE}
-
-```
-
-
-```{r, echo=FALSE, warning=FALSE, message = FALSE}
-
-```
