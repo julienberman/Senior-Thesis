@@ -1,0 +1,92 @@
+---
+title: "candidates_cleaning"
+author: "Julien Berman"
+date: "2024-09-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Load libraries.
+## install via `install.packages("name")`
+library(ggplot2)
+library(maps)
+library(tidyverse)
+library(usmap)
+library(plotly)
+library(gridExtra)
+library(sf)
+library(ggrepel)
+library(shiny)
+library(leaflet)
+library(stargazer)
+library(blogdown)
+library(car)
+library(lubridate)
+library(zoo)
+library(modelsummary)
+library(GGally)
+library(readxl)
+library(caret)
+library(CVXR)
+library(glmnet)
+library(stats)
+library(formula.tools)
+```
+
+```{r, echo=FALSE, warning=FALSE, message = FALSE}
+# Load dataset
+df <- read_csv("data/candidates-final.csv")
+```
+```{r, echo=FALSE, warning=FALSE, message = FALSE}
+columns = c("race_id", "year", "race", "race_type", "primary", "statedistrict", "name", "party", "status", "unopposed", "votes", "totalvotes", "win", "share_male", "share_white", "share_black", "share_hisp")
+
+df %>% 
+  arrange(year, race, statedistrict, race_type) %>% 
+  select(columns) %>% 
+  filter(str_detect(name, "raskin")) %>% 
+  View()
+
+df %>% 
+  arrange(year, race, statedistrict, race_type) %>% 
+  select(columns) %>% 
+  filter(votes == totalvotes) %>% 
+  View()
+
+df %>% 
+  arrange(year, race, statedistrict, race_type) %>% 
+  select(columns) %>% 
+  filter(is.na(votes) & unopposed == FALSE) %>% 
+  View()
+
+df %>% 
+  arrange(year, race, statedistrict, race_type) %>% 
+  select(columns) %>% 
+  filter(race == "Senate" & race_type == "gen" & str_detect(name, "brown")) %>% 
+  View()
+
+df %>% 
+  arrange(year, race, statedistrict, race_type) %>% 
+  select(columns) %>% 
+  filter(is.na(share_white)) %>% 
+  View()
+
+colnames(df)
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message = FALSE}
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message = FALSE}
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message = FALSE}
+
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message = FALSE}
+
+```
