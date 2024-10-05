@@ -11,4 +11,7 @@ Import('*')
 #           '#output/derived/wb_clean/gdp_education.csv']
 # env.Stata(target, source)
 
-target = ['#output/candidates_clean/cleaned_candidates.csv']
+target = ['#output/derived/candidates_clean/candidates_clean_n1.csv']
+source = ['#source/derived/candidates_clean/00_candidates_main.R']
+env.Depends(target, '#source/raw_data/candidates.csv')
+env.R(target, source)

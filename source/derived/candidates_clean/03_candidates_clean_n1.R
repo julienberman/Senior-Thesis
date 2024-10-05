@@ -1,30 +1,3 @@
-# Load libraries.
-## install via `install.packages("name")`
-library(ggplot2)
-library(maps)
-library(tidyverse)
-library(usmap)
-library(plotly)
-library(gridExtra)
-library(sf)
-library(ggrepel)
-library(shiny)
-library(leaflet)
-library(stargazer)
-library(blogdown)
-library(car)
-library(lubridate)
-library(zoo)
-library(modelsummary)
-library(GGally)
-library(readxl)
-library(caret)
-library(CVXR)
-library(glmnet)
-library(stats)
-library(formula.tools)
-
-
 # Load dataset
 df <- read_csv("data/candidates-final.csv")
 columns = c("race_id", "year", "race", "race_type", "primary", "statedistrict", "name", "party", "status", "unopposed", "votes", "totalvotes", "win", "share_male", "share_white", "share_black", "share_hisp")

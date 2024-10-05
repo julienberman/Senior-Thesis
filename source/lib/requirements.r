@@ -2,7 +2,7 @@ install.packages(c(
     "car",
     "caret",
     "CVXR",
-    "formula.tools"
+    "formula.tools",
     "GGally",
     "ggplot2",
     "ggrepel",
