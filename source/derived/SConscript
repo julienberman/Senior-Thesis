@@ -1,17 +1,20 @@
 Import('*')
 
-# target = ['#output/derived/wb_clean/gdp_education.csv']
-# source = ['#source/derived/wb_clean/build.py',
-#           '#datastore/raw/world_bank/orig/API_NY.GDP.PCAP.CD_DS2_en_csv_v2_1740213.csv',
-#           '#datastore/raw/world_bank/orig/API_SE.XPD.TOTL.GD.ZS_DS2_en_csv_v2_1740282.csv']
-# env.Python(target, source)
+# Define all source files that will be part of the cleaning process
+r_sources = [
+    '#source/derived/candidates_clean/00_candidates_main.R',
+    '#source/derived/candidates_clean/01_candidates_imports.R',
+    '#source/derived/candidates_clean/02_candidates_helper_functions.R',
+    '#source/derived/candidates_clean/03_candidates_clean_n1.R'
+]
 
-# target = ['#output/derived/wb_clean/gdp_education_logs.csv']
-# source = ['#source/derived/wb_clean/takelogs.do',
-#           '#output/derived/wb_clean/gdp_education.csv']
-# env.Stata(target, source)
-
+# Define main target and source
 target = ['#output/derived/candidates_clean/candidates_clean_n1.csv']
 source = ['#source/derived/candidates_clean/00_candidates_main.R']
+
+# Add dependencies for all R scripts and raw data
+env.Depends(target, r_sources)
 env.Depends(target, '#source/raw_data/candidates.csv')
+
+# Build command
 env.R(target, source)
