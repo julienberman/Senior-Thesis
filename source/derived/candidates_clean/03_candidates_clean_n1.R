@@ -1,21 +1,18 @@
-
-'''
-Candidates cleaning file n1
-- Load raw data
-- rename and recode variables
-
-'''
+# Candidates cleaning file n1
+# - Load raw data
+# - rename and recode variables
 
 # link dependencies
 source("source/derived/candidates_clean/01_candidates_imports.R")
 
 # load datasets
 df_candidates <- read_csv("source/raw_data/candidates.csv", locale = locale(encoding = "UTF-8"))
+df_candidates_aug <- read_csv("source/raw_data/candidates_aug.csv", locale = locale(encoding = "UTF-8"))
+df_cpr <- read_csv("source/raw_data/cpr_ratings.csv", locale = locale(encoding = "UTF-8"))
 df_states <- read_csv("source/raw_data/state_codes.csv", locale = locale(encoding = "UTF-8"))
 df_econ <- read_csv("source/raw_data/econ_indicators.csv", locale = locale(encoding = "UTF-8"))
 
-
-columns = c("race_id", "year", "race", "state2", "district2", "statedistrict", "census_division",	"census_region", "primary",
+columns_candidates = c("race_id", "year", "race", "state2", "district2", "statedistrict", "census_division",	"census_region", "primary",
             "race_type", "name", "party", "status", "incumbent", "unopposed", "votes", "totalvotes", "voteshare", "win",
             "population", "share_male", "share_white", "share_black", "share_hisp", "share_other", "share_u18", "share_65plus",
             "log_income_per_capita", "unemprate",	"lfp", "universalism", "fb_connectedness",	"fb_bias", 
@@ -32,7 +29,7 @@ columns = c("race_id", "year", "race", "state2", "district2", "statedistrict", "
 
 df_candidates <- df_candidates %>% 
   # get relevant columns
-  select(all_of(columns)) %>% 
+  select(all_of(columns_candidates)) %>% 
   # merge state codes 
   left_join(df_states, by = c("state2" = "state_num")) %>% 
   relocate(state, state_abbr, .after = race) %>% 
@@ -72,30 +69,106 @@ df_candidates <- df_candidates %>%
       TRUE                         ~ status  # Retain original status if NA
     )
   ) %>% 
+  # drop duplicate rows
+  distinct() %>% 
+  # merge advertisement info from candidates_aug
+  left_join(df_candidates_aug %>% select(race_id, name, starts_with("t_")), by = c("race_id", "name")) %>%
+  mutate(has_ads = ifelse(!is.na(t_econ), 1, 0)) %>% 
+  relocate(has_ads, .before = t_econ) %>% 
   # sort
   arrange(year, race, state, district_code)
 
+# clean CPR dataset
+columns_cpr = c("Cycle", "Office", "dist_num", "State", "Rating")
+
+df_cpr <- df_cpr %>% 
+  # get relevant columns
+  select(all_of(columns_cpr)) %>% 
+  # rename columns
+  rename(
+    year = Cycle,
+    race = Office,
+    district_code = dist_num,
+    state = State,
+    cpr_rating = Rating,
+  ) %>% 
+  # recode
+  mutate(
+    state = tolower(state),
+    race = tolower(race),
+    cpr_rating = tolower(cpr_rating),
+    race_type = "gen",
+    district_code = ifelse(district_code == "AL", 1, district_code),
+    district_code = ifelse(race == "senate" | race == "governor", 0, district_code),
+    district_code = as.numeric(district_code)
+  ) %>% 
+  # drop presidential races and pick relevant years
+  filter(!race == "president" & year >= 2000) %>% 
+  # drop duplicates. Deal with asterisked states
+  distinct(year, race, state, district_code, race_type, .keep_all = TRUE)
+  
+
+# clean economic indicators
+df_econ <- df_econ %>% 
+  # filter to relevant yearsc
+  filter(year >= 2000 & year <= 2022) %>% 
+  # filter to quarter 2
+  filter(month %in% c(4, 5, 6)) %>% 
+  # aggregate
+  group_by(year) %>% 
+  summarize(
+    jobs_nat = mean(jobs, na.rm = TRUE),
+    pce_nat = mean(pce, na.rm = TRUE),
+    rdpi_nat = mean(rdpi, na.rm = TRUE),
+    cpi_nat = mean(cpi, na.rm = TRUE),
+    ics_nat = mean(ics, na.rm = TRUE),
+    sp500_nat = mean(sp500, na.rm = TRUE),
+    unemp_nat = mean(unemp, na.rm = TRUE)
+  )
+
+# merge CPR and econ indicators into candidates
+df_candidates <- df_candidates %>% 
+  # merge econ indicators
+  left_join(df_econ, by = "year") %>% 
+  # merge CPR
+  left_join(df_cpr, by = c("year", "race", "state", "district_code", "race_type")) %>% 
+  relocate(cpr_rating, .after = win)
+
+
+# missing a ton of 2022 races
+df_cpr %>% 
+  anti_join(df_candidates, by = c("year", "race", "state", "district_code", "race_type")) %>%
+  filter(year == 2022) %>% 
+  View()
+
+  
+# non 2022 missing races
+df_cpr %>% 
+  anti_join(df_candidates, by = c("year", "race", "state", "district_code", "race_type")) %>%
+  filter(!year == 2022) %>% 
+  arrange(desc(year)) %>% 
+  View()
+
+
+
 # Quantify missingness
 
-
-'''
-df %>% 
-  arrange(year, race, statedistrict, race_type) %>% 
-  select(columns) %>% 
-  filter(is.na(votes) & unopposed == FALSE) %>% 
-  View()
-
-df %>% 
-  arrange(year, race, statedistrict, race_type) %>% 
-  select(columns) %>% 
-  filter(race == "Senate" & race_type == "gen" & str_detect(name, "brown")) %>% 
-  View()
-
-df %>% 
-  arrange(year, race, statedistrict, race_type) %>% 
-  select(columns) %>% 
-  filter(is.na(share_white)) %>% 
-  View()
-
-colnames(df)
-'''
+# df %>% 
+#   arrange(year, race, statedistrict, race_type) %>% 
+#   select(columns) %>% 
+#   filter(is.na(votes) & unopposed == FALSE) %>% 
+#   View()
+# 
+# df %>% 
+#   arrange(year, race, statedistrict, race_type) %>% 
+#   select(columns) %>% 
+#   filter(race == "Senate" & race_type == "gen" & str_detect(name, "brown")) %>% 
+#   View()
+# 
+# df %>% 
+#   arrange(year, race, statedistrict, race_type) %>% 
+#   select(columns) %>% 
+#   filter(is.na(share_white)) %>% 
+#   View()
+# 
+# colnames(df)
