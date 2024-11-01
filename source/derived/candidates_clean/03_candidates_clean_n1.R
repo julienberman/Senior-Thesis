@@ -4,11 +4,13 @@
 
 # link dependencies
 source("source/derived/candidates_clean/01_candidates_imports.R")
+source("source/derived/candidates_clean/02_candidates_helper_functions.R")
 
 # load datasets
 df_candidates <- read_csv("source/raw_data/candidates.csv", locale = locale(encoding = "UTF-8"))
 df_candidates_aug <- read_csv("source/raw_data/candidates_aug.csv", locale = locale(encoding = "UTF-8"))
 df_cpr <- read_csv("source/raw_data/cpr_ratings.csv", locale = locale(encoding = "UTF-8"))
+df_cpr_aug <- read_csv("source/raw_data/cpr_ratings_aug.csv", local = locale(encoding = "UTF-8"))
 df_states <- read_csv("source/raw_data/state_codes.csv", locale = locale(encoding = "UTF-8"))
 df_econ <- read_csv("source/raw_data/econ_indicators.csv", locale = locale(encoding = "UTF-8"))
 
@@ -79,9 +81,14 @@ df_candidates <- df_candidates %>%
   arrange(year, race, state, district_code)
 
 # clean CPR dataset
-columns_cpr = c("Cycle", "Office", "dist_num", "State", "Rating")
+columns_cpr = c("Cycle", "Office", "dist_num", "State", "Rating", "EarlyRating")
 
 df_cpr <- df_cpr %>% 
+  # merge in early ratings
+  left_join(df_cpr_aug, by = c("Cycle", "Office", "District")) %>% 
+  relocate(EarlyRating, .after = "Rating") %>%
+  # fill missing early ratings with the corresponding late rating
+  mutate(EarlyRating = coalesce(EarlyRating, Rating)) %>% 
   # get relevant columns
   select(all_of(columns_cpr)) %>% 
   # rename columns
@@ -90,23 +97,35 @@ df_cpr <- df_cpr %>%
     race = Office,
     district_code = dist_num,
     state = State,
-    cpr_rating = Rating,
+    cpr_rating_late = Rating,
+    cpr_rating_early = EarlyRating
   ) %>% 
   # recode
   mutate(
     state = tolower(state),
     race = tolower(race),
-    cpr_rating = tolower(cpr_rating),
+    cpr_rating_late = tolower(cpr_rating_late),
+    cpr_rating_early = tolower(cpr_rating_early),
     race_type = "gen",
     district_code = ifelse(district_code == "AL", 1, district_code),
     district_code = ifelse(race == "senate" | race == "governor", 0, district_code),
     district_code = as.numeric(district_code)
   ) %>% 
+  dummy_cols(select_columns = "cpr_rating_early") %>% 
+  rename(
+    cpr_solid_d = `cpr_rating_early_solid d`,
+    cpr_likely_d = `cpr_rating_early_likely d`,
+    cpr_lean_d = `cpr_rating_early_lean d`,
+    cpr_toss_up = `cpr_rating_early_toss up`,
+    cpr_lean_r = `cpr_rating_early_lean r`,
+    cpr_likely_r = `cpr_rating_early_likely r`,
+    cpr_solid_r = `cpr_rating_early_solid r`,
+  ) %>% 
+  select(-ends_with("i"), -ends_with("?")) %>%
   # drop presidential races and pick relevant years
   filter(!race == "president" & year >= 2000) %>% 
   # drop duplicates. Deal with asterisked states
   distinct(year, race, state, district_code, race_type, .keep_all = TRUE)
-  
 
 # clean economic indicators
 df_econ <- df_econ %>% 
@@ -132,7 +151,92 @@ df_candidates <- df_candidates %>%
   left_join(df_econ, by = "year") %>% 
   # merge CPR
   left_join(df_cpr, by = c("year", "race", "state", "district_code", "race_type")) %>% 
-  relocate(cpr_rating, .after = win)
+  # create a variable for whether candidate is favored
+  mutate(
+    cpr_favored = ifelse( 
+      (cpr_rating_early %in% c("lean d", "likely d", "solid d") & party == "democrat") | 
+        (cpr_rating_early %in% c("lean r", "likely r", "solid r") & party == "republican"), 
+      1, 0)
+  ) %>% 
+  relocate(starts_with("cpr_"), .after = win)
+
+View(df_candidates)
+
+
+df_candidates_gen <- df_candidates %>% 
+  filter(race_type == "gen") %>% 
+  filter(has_ads == "1") %>% 
+  # drop dummy
+  select(-cpr_solid_r) %>% 
+  relocate(c("t_econ", "t_culture", "t_econ_minus_culture"), .after = win) %>% 
+  # drop zeros
+  filter(t_econ > 0) %>% 
+  # drop unopposed
+  filter(unopposed == FALSE)
+
+formula_1 = as.formula("vote_share ~ t_econ")
+formula_2 = as.formula("vote_share ~ t_econ + share_black + share_hisp + share_other + share_u18 + share_65plus + log_income_per_capita")
+formula_3 = as.formula("vote_share ~ t_econ + share_black + share_hisp + share_other + share_u18 + share_65plus + log_income_per_capita + factor(year) + factor(state)")
+formula_4 = as.formula("vote_share ~ t_econ + cpr_likely_r + cpr_lean_r + cpr_toss_up + cpr_lean_d + cpr_likely_d + cpr_solid_d")
+formula_5 = as.formula("vote_share ~ t_econ * cpr_favored + t_econ * incumbent + share_black + share_hisp + share_other + share_u18 + share_65plus + log_income_per_capita + factor(year) + factor(state)")
+formula_6 = as.formula("vote_share ~ t_econ * cpr_favored + t_econ * incumbent + unemprate*incumbent + lfp*incumbent")
+formula_7 = as.formula("vote_share ~ t_econ * incumbent")
+
+formula_8 = as.formula("vote_share ~ t_econ_minus_culture")
+formula_9 = as.formula("vote_share ~ t_econ_minus_culture + share_black + share_hisp + share_other + share_u18 + share_65plus + log_income_per_capita")
+formula_10 = as.formula("vote_share ~ t_econ_minus_culture + share_black + share_hisp + share_other + share_u18 + share_65plus + log_income_per_capita + factor(year) + factor(state)")
+formula_11 = as.formula("vote_share ~ t_econ_minus_culture + cpr_likely_r + cpr_lean_r + cpr_toss_up + cpr_lean_d + cpr_likely_d + cpr_solid_d")
+formula_12 = as.formula("vote_share ~ t_econ_minus_culture * cpr_favored + t_econ_minus_culture * incumbent + share_black + share_hisp + share_other + share_u18 + share_65plus + log_income_per_capita + factor(year) + factor(state)")
+formula_13 = as.formula("vote_share ~ t_econ_minus_culture * cpr_favored + t_econ_minus_culture * incumbent + unemprate*incumbent + lfp*incumbent")
+
+
+econ_formulas <- list(formula_1, formula_2, formula_3, formula_4, formula_5, formula_6, formula_7)
+econ_minus_culture_formulas <-list(formula_8, formula_9, formula_10, formula_11, formula_12, formula_13)
+
+econ_models <- train_models(econ_formulas, df_candidates_gen)
+econ_minus_culture_models <- train_models(econ_minus_culture_formulas, df_candidates_gen)
+
+model <- lm(formula_12, data = df_candidates_gen)
+
+summary(model)
+
+generate_table(
+  models = econ_models,
+  title = "Results of Regressions of Vote Share on Econ",
+  output_file = "table_1.tex"
+)
+
+generate_table(
+  models = econ_minus_culture_models,
+  title = "Results of Regressions of Vote Share on Econ Minus Culture",
+  output_file = "table_2.tex"
+)
+
+
+test_model = lm("win ~ cpr_favored", data = df_candidates_gen)
+summary(test_model)
+
+df_candidates_gen %>% 
+  filter(t_econ >= 0.5 & t_econ <= 0.75) %>% 
+  ggplot(mapping = aes(x = t_econ, y = vote_share)) +
+  geom_point() + 
+  geom_smooth()
+
+df_candidates_gen %>% 
+  filter(unemprate < 0.2) %>% 
+  ggplot(mapping = aes(x = unemprate, y = t_econ)) +
+  geom_point() + 
+  geom_smooth()
+
+
+View(df_candidates_gen)
+
+
+
+
+
+
+
 
 
 # missing a ton of 2022 races

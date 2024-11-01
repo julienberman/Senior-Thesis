@@ -1,9 +1,11 @@
 # Install and load required packages
 
 packages <- c(
+  "broom",
   "car",
   "caret",
   "CVXR",
+  "fastDummies",
   "formula.tools",
   "GGally",
   "ggplot2",
@@ -19,7 +21,9 @@ packages <- c(
   "sf",
   "shiny",
   "stargazer",
+  "stringr",
   "tidyverse",
+  "texreg",
   "usmap",
   "zoo"
 )
