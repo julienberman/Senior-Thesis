@@ -9,6 +9,7 @@ source("source/derived/helper_functions.R")
 # load datasets
 df_candidates <- read_csv("source/raw_data/candidates.csv", locale = locale(encoding = "UTF-8"))
 df_candidates_aug <- read_csv("source/raw_data/candidates_aug.csv", locale = locale(encoding = "UTF-8"))
+df_presidents <- read_csv("source/raw_data/presidents.csv", locale = locale(encoding = "UTF-8"))
 df_cpr <- read_csv("source/raw_data/cpr_ratings.csv", locale = locale(encoding = "UTF-8"))
 df_cpr_aug <- read_csv("source/raw_data/cpr_ratings_aug.csv", local = locale(encoding = "UTF-8"))
 df_states <- read_csv("source/raw_data/state_codes.csv", locale = locale(encoding = "UTF-8"))
@@ -16,7 +17,6 @@ df_econ <- read_csv("source/raw_data/econ_indicators.csv", locale = locale(encod
 
 # set output directory
 output_dir <- "output/derived/clean"
-
 
 columns_candidates = c("race_id", "year", "race", "state2", "district2", "statedistrict", "census_division",	"census_region", "primary",
             "race_type", "name", "party", "status", "incumbent", "unopposed", "votes", "totalvotes", "voteshare", "win",
@@ -27,13 +27,16 @@ columns_candidates = c("race_id", "year", "race", "state2", "district2", "stated
             "log_income_per_capita_2000", "num.givers","num.givers.total", "total.receipts","total.disbursements", 
             "total.indiv.contribs", "total.unitemized", "total.pac.contribs", "total.party.contribs", 
             "total.contribs.from.candidate", "votesmart_id", "economic_conservatism_average", "social_conservatism_average",
-            "channel_mean_cnn_leo", "channel_mean_fnc_leo", "channel_mean_msnbc_leo",	"channel_median_cnn_leo",	
+            "recipient.cfscore", "dwdime", "channel_mean_cnn_leo", "channel_mean_fnc_leo", "channel_mean_msnbc_leo", "channel_median_cnn_leo",	
             "channel_median_fnc_leo", "channel_median_msnbc_leo",	"channel_cnn_milena",	
             "channel_fnc_milena", "channel_msnbc_milena",	"rtg_cnn_milena",	"rtg_fnc_milena",	"rtg_msnbc_milena",
             "shr_cnn_milena",	"shr_fnc_milena",	"shr_msnbc_milena",	"channel_fnc_pc",	
             "channel_cnn_pc",	"channel_msnbc_pc",	"rtg_fnc_pc")
 
 df_candidates <- df_candidates %>% 
+  # stack presidential races on top of house, senate, and gubernatorial races
+  bind_rows(df_presidents) %>% 
+  select(any_of(names(df_candidates))) %>%
   # get relevant columns
   select(all_of(columns_candidates)) %>% 
   # merge state codes 
@@ -55,8 +58,13 @@ df_candidates <- df_candidates %>%
     total_pac_contribs = total.pac.contribs,
     total_party_contribs = total.party.contribs,
     total_contribs_from_candidate = total.contribs.from.candidate,
+    vs_id = votesmart_id,
+    vs_econ_conservatism = economic_conservatism_average,
+    vs_social_conservatism = social_conservatism_average,
+    cfscore = recipient.cfscore,
     unemp_local = unemprate,
     lfpr_local = lfp
+    
   ) %>% 
   # recode
   mutate(
@@ -80,11 +88,17 @@ df_candidates <- df_candidates %>%
   # drop duplicate rows
   distinct() %>% 
   # merge advertisement info from candidates_aug
-  left_join(df_candidates_aug %>% select(race_id, name, starts_with("t_")), by = c("race_id", "name")) %>%
+  left_join(df_candidates_aug %>% 
+              bind_rows(df_presidents) %>% 
+              select(any_of(names(df_candidates_aug))) %>% 
+              select(race_id, name, n_airings, n_videos, starts_with("t_")), 
+            by = c("race_id", "name")) %>%
   mutate(has_ads = ifelse(!is.na(t_econ), 1, 0)) %>% 
-  relocate(has_ads, .before = t_econ) %>% 
+  relocate(c("has_ads", "t_econ_minus_culture", "t_econ", "t_culture", "vs_econ_conservatism", "vs_social_conservatism", "cfscore", "dwdime", "n_airings", "n_videos"), .after = win) %>% 
   # sort
-  arrange(factor(race, levels = c("House", "Senate", "Governor")), year, state, district_code)
+  arrange(factor(race, levels = c("president", "house", "senate", "governor")), year, state, district_code)
+
+View(df_candidates)
 
 # clean CPR dataset
 columns_cpr = c("Cycle", "Office", "dist_num", "State", "Rating", "EarlyRating")
