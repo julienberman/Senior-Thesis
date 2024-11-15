@@ -27,7 +27,7 @@ columns_candidates = c("race_id", "year", "race", "state2", "district2", "stated
             "log_income_per_capita_2000", "num.givers","num.givers.total", "total.receipts","total.disbursements", 
             "total.indiv.contribs", "total.unitemized", "total.pac.contribs", "total.party.contribs", 
             "total.contribs.from.candidate", "votesmart_id", "economic_conservatism_average", "social_conservatism_average",
-            "recipient.cfscore", "dwdime", "channel_mean_cnn_leo", "channel_mean_fnc_leo", "channel_mean_msnbc_leo", "channel_median_cnn_leo",	
+            "recipient.cfscore", "dwdime", "dwnom1", "channel_mean_cnn_leo", "channel_mean_fnc_leo", "channel_mean_msnbc_leo", "channel_median_cnn_leo",	
             "channel_median_fnc_leo", "channel_median_msnbc_leo",	"channel_cnn_milena",	
             "channel_fnc_milena", "channel_msnbc_milena",	"rtg_cnn_milena",	"rtg_fnc_milena",	"rtg_msnbc_milena",
             "shr_cnn_milena",	"shr_fnc_milena",	"shr_msnbc_milena",	"channel_fnc_pc",	
@@ -58,13 +58,13 @@ df_candidates <- df_candidates %>%
     total_pac_contribs = total.pac.contribs,
     total_party_contribs = total.party.contribs,
     total_contribs_from_candidate = total.contribs.from.candidate,
+    dwnom = dwnom1,
     vs_id = votesmart_id,
     vs_econ_conservatism = economic_conservatism_average,
     vs_social_conservatism = social_conservatism_average,
     cfscore = recipient.cfscore,
     unemp_local = unemprate,
     lfpr_local = lfp
-    
   ) %>% 
   # recode
   mutate(
@@ -93,12 +93,13 @@ df_candidates <- df_candidates %>%
               select(any_of(names(df_candidates_aug))) %>% 
               select(race_id, name, n_airings, n_videos, starts_with("t_")), 
             by = c("race_id", "name")) %>%
-  mutate(has_ads = ifelse(!is.na(t_econ), 1, 0)) %>% 
-  relocate(c("has_ads", "t_econ_minus_culture", "t_econ", "t_culture", "vs_econ_conservatism", "vs_social_conservatism", "cfscore", "dwdime", "n_airings", "n_videos"), .after = win) %>% 
+  mutate(
+    has_ads = ifelse(!is.na(t_econ), 1, 0),
+    has_vs = ifelse(!is.na(vs_econ_conservatism), 1, 0)
+    ) %>% 
+  relocate(c("has_ads", "t_econ_minus_culture", "t_econ", "t_culture", "vs_econ_conservatism", "vs_social_conservatism", "cfscore", "dwdime", "dwnom", "n_airings", "n_videos"), .after = win) %>% 
   # sort
   arrange(factor(race, levels = c("president", "house", "senate", "governor")), year, state, district_code)
-
-View(df_candidates)
 
 # clean CPR dataset
 columns_cpr = c("Cycle", "Office", "dist_num", "State", "Rating", "EarlyRating")
@@ -182,7 +183,7 @@ df_candidates <- df_candidates %>%
         (cpr_rating_early %in% c("lean r", "likely r", "solid r") & party == "republican"), 
       1, 0)
   ) %>% 
-  relocate(starts_with("cpr_"), .after = win)
+  relocate(starts_with("cpr_"), .before = population)
 
 # save clean data
 if (!dir.exists(output_dir)) {

@@ -119,3 +119,69 @@ configure_fixest <- function(
   
   return(TRUE)
 }
+
+
+
+# function to create scatter plot
+scatter <- function(data, x_var, y_var, 
+                                 title = NULL,
+                                 subtitle = NULL,
+                                 x_lab = NULL,
+                                 y_lab = NULL,
+                                 color = "#2171B5",
+                                 add_correlation = TRUE,
+                                 add_regression = TRUE,
+                                 point_alpha = 0.6,
+                                 point_size = 2) {
+  
+  # Calculate correlation
+  cor_val <- cor(data[[x_var]], data[[y_var]], use = "complete.obs")
+  
+  # Create base plot
+  p <- ggplot(data, aes_string(x = x_var, y = y_var)) +
+    # Add points
+    geom_point(color = color, 
+               alpha = point_alpha, 
+               size = point_size) +
+    # Add regression line if requested
+    {if(add_regression) 
+      geom_smooth(method = "lm", 
+                  color = "#EF3B2C", 
+                  fill = "#FEE0D2", 
+                  alpha = 0.2)} +
+    # Add correlation annotation if requested
+    {if(add_correlation)
+      annotate("text", 
+               x = -Inf, y = Inf,
+               label = sprintf("r = %.3f", cor_val),
+               hjust = -0.2, 
+               vjust = 2,
+               size = 4,
+               fontface = "italic")} +
+    # Customize theme
+    theme_minimal() +
+    theme(
+      # Title and subtitle formatting
+      plot.title = element_text(size = 16, face = "bold", 
+                                margin = margin(b = 10)),
+      plot.subtitle = element_text(size = 12, color = "gray30",
+                                   margin = margin(b = 20)),
+      # Axis formatting
+      axis.title = element_text(size = 12, color = "gray30"),
+      axis.text = element_text(size = 10),
+      # Grid formatting
+      panel.grid.major = element_line(color = "gray90"),
+      panel.grid.minor = element_line(color = "gray95"),
+      # Add padding
+      plot.margin = margin(30, 30, 30, 30)
+    ) +
+    # Add custom labels if provided
+    labs(
+      title = title %||% paste("Relationship between", x_var, "and", y_var),
+      subtitle = subtitle,
+      x = x_lab %||% gsub("_", " ", x_var),
+      y = y_lab %||% gsub("_", " ", y_var)
+    )
+  
+  return(p)
+}
