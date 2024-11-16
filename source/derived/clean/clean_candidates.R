@@ -83,7 +83,8 @@ df_candidates <- df_candidates %>%
       incumbent == TRUE ~ "incumbent",
       incumbent == FALSE  ~ "challenger",
       TRUE                         ~ status  # Retain original status if NA
-    )
+    ),
+    unemp_local = unemp_local * 100
   ) %>% 
   # drop duplicate rows
   distinct() %>% 
@@ -95,9 +96,11 @@ df_candidates <- df_candidates %>%
             by = c("race_id", "name")) %>%
   mutate(
     has_ads = ifelse(!is.na(t_econ), 1, 0),
-    has_vs = ifelse(!is.na(vs_econ_conservatism), 1, 0)
+    has_vs = ifelse(!is.na(vs_econ_conservatism), 1, 0),
+    is_dem = ifelse(party == "democrat", 1, 0)
     ) %>% 
   relocate(c("has_ads", "t_econ_minus_culture", "t_econ", "t_culture", "vs_econ_conservatism", "vs_social_conservatism", "cfscore", "dwdime", "dwnom", "n_airings", "n_videos"), .after = win) %>% 
+  relocate(is_dem, .after = party) %>% 
   # sort
   arrange(factor(race, levels = c("president", "house", "senate", "governor")), year, state, district_code)
 
@@ -150,29 +153,34 @@ df_cpr <- df_cpr %>%
 
 # clean economic indicators
 df_econ <- df_econ %>% 
-  # filter to relevant years
-  filter(year >= 2000 & year <= 2022) %>% 
   # filter to quarter 2
   filter(month %in% c(4, 5, 6)) %>% 
   # aggregate
   group_by(year) %>% 
   summarize(
-    jobs_nat = mean(jobs, na.rm = TRUE),
-    pce_nat = mean(pce, na.rm = TRUE),
-    rdpi_nat = mean(rdpi, na.rm = TRUE),
-    cpi_nat = mean(cpi, na.rm = TRUE),
-    ics_nat = mean(ics, na.rm = TRUE),
-    sp500_nat = mean(sp500, na.rm = TRUE),
-    unemp_nat = mean(unemp/100, na.rm = TRUE) 
-  )
+    rdpi = mean(rdpi, na.rm = TRUE),
+    cpi = mean(cpi, na.rm = TRUE),
+    unemp_nat = mean(unemp, na.rm = TRUE),
+    rgdppc_growth = first(rgdppc),
+    ics = mean(ics, na.rm = TRUE),
+    sp500 = mean(sp500, na.rm = TRUE),
+    jobs = mean(jobs, na.rm = TRUE),
+    pce = mean(pce, na.rm = TRUE)
+  ) %>% 
+  mutate(
+    inflation = ((cpi - lag(cpi)) / lag(cpi)) * 100,
+    rdpi_growth = ((rdpi - lag(rdpi)) / lag(rdpi)) * 100,
+  ) %>% 
+  # filter to relevant years
+  filter(year >= 2000 & year <= 2022)
 
 # merge CPR and econ indicators into candidates
 df_candidates <- df_candidates %>% 
   # merge econ indicators
-  left_join(df_econ, by = "year") %>% 
+  left_join(df_econ %>% select(year, unemp_nat, inflation, rdpi_growth, rgdppc_growth, ics), by = "year") %>% 
   # relocate econ indicators
   relocate(
-    ends_with("_nat"), .after = lfpr_local
+    c("unemp_nat", "inflation", "rdpi_growth", "rgdppc_growth", "ics"), .after = lfpr_local
   ) %>% 
   # merge CPR
   left_join(df_cpr, by = c("year", "race", "state", "district_code", "race_type")) %>% 

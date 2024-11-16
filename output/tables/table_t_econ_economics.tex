@@ -1,0 +1,37 @@
+
+\begin{table}[htbp]
+   \caption{Impact of Economic Conditions on Type of Political Messaging in House Races (2000 - 2020)}
+   \bigskip
+   \centering
+   \begin{tabular}{lccccccc}
+      \toprule
+       & \multicolumn{7}{c}{t\_econ\_minus\_culture}\\
+                                  & (1)           & (2)           & (3)           & (4)           & (5)            & (6)            & (7)\\  
+      \midrule 
+      Regional Unemployment       & 0.026$^{***}$ &               &               &               &                &                & 0.027$^{***}$\\   
+                                  & (0.004)       &               &               &               &                &                & (0.007)\\   
+      National Unemployment       &               & 0.017$^{***}$ &               &               &                &                & -0.001\\   
+                                  &               & (0.003)       &               &               &                &                & (0.006)\\   
+      Inflation                   &               &               & -0.016$^{**}$ &               &                &                &   \\   
+                                  &               &               & (0.007)       &               &                &                &   \\   
+      Growth in Disposable Income &               &               &               & -0.003        &                &                &   \\   
+                                  &               &               &               & (0.003)       &                &                &   \\   
+      Growth in GDP Per Capita    &               &               &               &               & -0.013$^{***}$ &                & -0.006\\   
+                                  &               &               &               &               & (0.005)        &                & (0.005)\\   
+      Consumer Sentiment Index    &               &               &               &               &                & -0.003$^{***}$ &   \\   
+                                  &               &               &               &               &                & (0.0006)       &   \\   
+       \\
+      Observations                & 1,631         & 1,631         & 1,631         & 1,631         & 1,631          & 1,631          & 1,631\\  
+      R$^2$                       & 0.334         & 0.326         & 0.312         & 0.310         & 0.313          & 0.325          & 0.334\\  
+      Adjusted R$^2$              & 0.140         & 0.131         & 0.113         & 0.110         & 0.113          & 0.129          & 0.140\\  
+      Demographic Controls        & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$   & $\checkmark$   & $\checkmark$\\   
+       \\
+      District fixed effects      & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$   & $\checkmark$   & $\checkmark$\\   
+      \bottomrule
+   \end{tabular}
+   
+   \par \raggedright 
+   \footnotesize Notes: Standard errors clustered by congressional district in parentheses. * p < 0.1, ** p < 0.05, *** p < 0.01. The dependent variable is the candidate's vote share. Net Economic Advertising measures the difference between the share of economic and cultural content in candidate's advertising. Favored by the CPR indicates districts rated as favoring the candidate's party by the Cook Political Report eight months prior to the election. Incumbent indicates candidates previously in office. District demographic controls include population, racial composition, and age composition.
+\end{table}
+
+

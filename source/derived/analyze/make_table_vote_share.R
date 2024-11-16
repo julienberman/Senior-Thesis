@@ -1,6 +1,5 @@
 # make regresion table: vote_share vs t_econ
 
-
 # link dependencies
 source("source/derived/imports.R")
 source("source/derived/helper_functions.R")
@@ -101,46 +100,27 @@ etable(models,
 
 # generate binned scatterplot
 
-
-# Create bins and calculate means
-binned_data <- df_candidates_house %>%
-  # Create bins
-  mutate(bin = ntile(t_econ_minus_culture, 20)) %>%
-  # Calculate means and standard errors for each bin
-  group_by(bin) %>%
-  summarize(
-    mean_x = mean(t_econ_minus_culture),
-    mean_y = mean(vote_share),
-    se = sd(vote_share) / sqrt(n()),
-    n = n()
-  ) %>%
-  # Calculate confidence intervals
-  mutate(
-    ci_lower = mean_y - 1.96 * se,
-    ci_upper = mean_y + 1.96 * se
-  )
-
-# Create the plot
-p <- ggplot(binned_data, aes(x = mean_x, y = mean_y)) +
-  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), 
-                width = 0.01, 
-                color = "gray60") +
-  geom_point(size = 3) +
-  geom_smooth(data = df_candidates_house, 
-              aes(x = t_econ_minus_culture, y = vote_share),
-              method = "lm", 
-              color = "blue", 
-              se = FALSE) +
-  labs(
-    x = "Net Economic Advertising",
-    y = "Vote Share"
-  ) +
+p <- ggplot(df_candidates_house, aes(x = t_econ_minus_culture, y = vote_share)) +
+  # Add binned points with standard error bars
+  stat_summary_bin(fun.data = "mean_se", 
+                   bins = 20,  # Same as your ntile(20)
+                   geom = "pointrange", 
+                   alpha = 0.8) +
+  # Add regression line
+  geom_smooth(method = "lm", 
+              se = FALSE, 
+              color = "blue") +
+  # Add vertical line at x=0
+  geom_vline(xintercept = 0, color = "black") +
+  # Labels
+  labs(x = "Net Economic Advertising",
+       y = "Vote Share") +
+  # Theme
   theme_bw() +
   theme(
     panel.grid = element_blank(),
     axis.title = element_text(face = "bold")
-  ) + 
-  geom_vline(xintercept = 0, color = "black")
+  )
 
 ggsave("output/tables/figure_vote_share.png", p, width = 8, height = 6)
 
