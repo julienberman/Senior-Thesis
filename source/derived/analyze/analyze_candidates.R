@@ -1,4 +1,4 @@
-# anaysis file
+# anaylsis file
 # - Load cleaned data
 # - Set up and train models
 
@@ -8,96 +8,8 @@ source("source/derived/helper_functions.R")
 
 set_dplyr_defaults()
 configure_fixest()
-
+ 
 df_candidates <- read_csv("output/derived/clean/candidates_clean.csv", locale = locale(encoding = "UTF-8"))
-
-# create dataframe of general elections for house races
-df_candidates_house <- df_candidates %>% 
-  filter(race_type == "gen" & has_ads == "1" & unopposed == FALSE & race == "house")
-
-# base model
-model1 <- feols(vote_share ~ t_econ_minus_culture, 
-                data = df_candidates_house,
-                cluster = ~state_district)
-
-# district fixed effects and year fixed effects
-model2 <- feols(vote_share ~ t_econ_minus_culture | state_district + year, 
-                data = df_candidates_house,
-                cluster = ~state_district)
-
-# district x year fixed effects and district x party fixed effects
-model3 <- feols(vote_share ~ t_econ_minus_culture | party^year + state_district^party, 
-                data = df_candidates_house,
-                cluster = ~state_district)
-
-# ... with cpr favorability interaction
-model4 <- feols(vote_share ~ t_econ_minus_culture*cpr_favored | party^year + state_district^party, 
-                data = df_candidates_house,
-                cluster = ~state_district)
-
-# ... with cpr favorability interaction and incumbency interaction
-model5 <- feols(vote_share ~ t_econ_minus_culture*incumbent | party^year + state_district^party, 
-                data = df_candidates_house,
-                cluster = ~state_district)
-
-model6 <- feols(vote_share ~ t_econ_minus_culture + cpr_solid_r + cpr_lean_d + cpr_likely_d + cpr_solid_d + cpr_lean_r + cpr_likely_r + cpr_toss_up | party^year + state_district^party, 
-                data = df_candidates_house,
-                cluster = ~state_district)
-
-model7 <- feols(vote_share ~ t_econ_minus_culture | party^year + state_district^party, 
-                data = df_candidates_house,
-                cluster = ~state_district)
-  
-# Then combine into list
-models <- list(
-  "Model 1" = model1,
-  "Model 2" = model2,
-  "Model 3" = model3,
-  "Model 4" = model4,
-  "Model 5" = model5
-)
-
-
-# Create two-way fixed effects table
-etable(models,     # First argument is the models list
-       title = "Impact of Economic Advertising on Vote Share in House Races (2000 - 2020)",
-       digits = 3,
-       signif.code = c("*" = .1, "**" = .05, "***" = .01),
-       # Add fixed effects indicators
-       # fixef.group = list(
-       #   "state_district" = "District FE",
-       #   "year" = "Year FE",
-       #   "state_district^year" = "District × Year FE",
-       #   "state_district^party" = "District × Party FE"
-       # ),
-       # Style settings
-       style.tex = style.tex("aer"),
-       dict = c(
-         "t_econ_minus_culture" = "Net Economic Advertising",
-         "cpr_favored" = "Favored by the CPR",
-         "incumbentTRUE" = "Incumbent",
-         "t_econ_minus_culture:cpr_favored" = "Net Economic Advertising × Favored",
-         "t_econ_minus_culture:incumbentTRUE" = "Net Economic Advertising × Incumbent",
-         "state_district" = "District FE",
-         "year" = "Year FE",
-         "state_district^year" = "District × Year FE",
-         "state_district^party" = "District × Party FE",
-         "nobs" = "Observations",
-          "r2" = "R²",
-          "ar2" = "Adjusted R²"
-         ),
-       # Add summary statistics
-       fitstat = ~n + r2 + ar2,
-       notes = paste0(
-         "\\footnotesize Notes: Standard errors clustered by congressional district in parentheses. ",
-         "* p< 0.1, ** p < 0.05, *** p < 0.01. ",
-         "The dependent variable is the candidate's vote share. ",
-         "Net Economic Advertising measures the difference between the share of economic and cultural content in candidate's advertising. ",
-         "Favored by the CPR indicates districts rated as favoring the candidate's party by the Cook Political Report eight months prior to the election. ",
-         "Incumbent indicates candidates previously in office."
-       ),
-       tex = TRUE
-)
 
 # Prepare data for regression discontinuity --> House races only
 threshold <- 0.1
@@ -183,9 +95,10 @@ ggplot(df_rdd, aes(x = primary_margin_adjusted, y = vote_share_general)) +
 # ------
 # ------
 
-df_candidates_house <- df_candidates %>% filter(race == "house" & has_ads == 1 & has_vs == 1)
+df_candidates_house <- df_candidates %>% filter(race == "house" & has_ads == 1)
 df_candidates_senate <- df_candidates %>% filter(race == "senate" & has_ads == 1 & has_vs == 1)
 df_candidates_governor <- df_candidates %>% filter(race == "governor" & has_ads == 1 & has_vs == 1)
+df_candidates_president <- df_candidates %>% filter(race == "president" & has_ads == 1)
 
 # DIME graph
 p1 <- ggplot(df_candidates_house, aes(x = dwdime, y = t_econ_minus_culture)) +
@@ -257,11 +170,11 @@ p4 <- ggplot(df_candidates_house, aes(x = vs_econ_conservatism, y = t_econ_minus
 # create correlation matrix
 corr <- df_candidates_house %>% select(t_econ_minus_culture, dwnom, dwdime, cfscore, vs_econ_conservatism) %>% cor(use = "pairwise.complete.obs")
 
-ggsave("output/econ_on_dime.png", plot = p1, width = 10, height = 7, dpi = 300)
-ggsave("output/econ_on_dwnom.png", plot = p2, width = 10, height = 7, dpi = 300)
-ggsave("output/econ_on_cfscore.png", plot = p3, width = 10, height = 7, dpi = 300)
-ggsave("output/econ_on_votesmart.png", plot = p4, width = 10, height = 7, dpi = 300)
-png("output/heatmap.png", width = 10, height = 7, units = 'in', res = 300)
+ggsave("output/derived/analyze/econ_on_dime.png", plot = p1, width = 10, height = 7, dpi = 300)
+ggsave("output/derived/analyze/econ_on_dwnom.png", plot = p2, width = 10, height = 7, dpi = 300)
+ggsave("output/derived/analyze/econ_on_cfscore.png", plot = p3, width = 10, height = 7, dpi = 300)
+ggsave("output/derived/analyze/econ_on_votesmart.png", plot = p4, width = 10, height = 7, dpi = 300)
+png("output/derived/analyze/heatmap.png", width = 10, height = 7, units = 'in', res = 300)
 corrplot(corr, 
          method = "color", 
          type = "upper", 
@@ -307,8 +220,33 @@ linearHypothesis(model_dwdime_3, c("I(dwdime^2) = 0", "I(dwdime^3) = 0"))
 linearHypothesis(model_dwnom_3, c("I(dwnom^2) = 0", "I(dwnom^3) = 0"))
 
 
+# Investigate the impact of economic conditions on t_econ_minus_culture
+# ------
+# ------
+# ------
 
+# relationship between share of advertisements and economic condidtions
+ggplot(df_candidates_house, aes(x = unemp_local, y = t_econ_minus_culture)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", formula = y ~ x) +
+  labs(
+    title = "Regression of Economic Share of Ads vs. National Unemployment",
+    x = "National Unemployment",
+    y = "Net share of economic ads"
+  ) + 
+  theme_bw() +
+  geom_hline(yintercept = 0, color = "black") +
+  geom_vline(xintercept = 0, color = "black") +
+  theme(
+    panel.grid = element_blank(),  # removes all gridlines
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
 
+model_unemp_1 <- feols(t_econ_minus_culture ~ cpi_nat + n_airings | state_district, data = df_candidates_house)
+model_unemp_2 <- feols(t_econ_minus_culture ~ unemp_local + n_airings, data = df_candidates_house)
+model_unemp_3 <- feols(t_econ_minus_culture ~ unemp_local + n_airings | state_district, data = df_candidates_house)
 
+etable(model_unemp_1)
 
-
+model <- feols(vote_share ~ t_econ_minus_culture*cpi_nat, data = df_candidates_senate)
+etable(model)

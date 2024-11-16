@@ -163,7 +163,7 @@ df_econ <- df_econ %>%
     cpi_nat = mean(cpi, na.rm = TRUE),
     ics_nat = mean(ics, na.rm = TRUE),
     sp500_nat = mean(sp500, na.rm = TRUE),
-    unemp_nat = mean(unemp, na.rm = TRUE)
+    unemp_nat = mean(unemp/100, na.rm = TRUE) 
   )
 
 # merge CPR and econ indicators into candidates
