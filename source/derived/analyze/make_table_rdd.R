@@ -90,4 +90,4 @@ p1 <- ggplot(df_rdd, aes(x = primary_margin_adjusted, y = vote_share_general)) +
        x = "Adjusted Primary Margin (positive if more economic candidate wins)",
        y = "General Election Vote Share")
 
-ggsave("output/derived/analyze/rdd.png", plot = p1, width = 10, height = 7, dpi = 300)
+ggsave("output/tables/figure_rdd.png", plot = p1, width = 10, height = 7, dpi = 300)
