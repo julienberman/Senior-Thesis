@@ -34,6 +34,7 @@ packages <- c(
   "tidyverse",
   "texreg",
   "usmap",
+  "wru",
   "zoo"
 )
 

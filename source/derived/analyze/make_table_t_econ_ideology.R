@@ -35,8 +35,11 @@ etable(model_ideology1, model_ideology2, model_ideology3, model_ideology4,
        digits = 3,
        digits.stats = 3,
        signif.code = c("*" = .1, "**" = .05, "***" = .01),
+       fontsize = "small",
+       page.width = "fit",
        style.tex = style.tex("aer"),
        dict = c(
+         "t_econ_minus_culture" = "Net Economic Advertising",
          "cfscore" = "Campaign Finance Score",
          "is_dem" = "Democrat",
          "dwnom" = "DW-NOMINATE Score",
@@ -62,9 +65,9 @@ etable(model_ideology1, model_ideology2, model_ideology3, model_ideology4,
          " For all ideology scores, more postive scores indicate a more conservative candidate, whereas more negative scores indicate a more progressive candidate.",
          " District demographic controls include population, racial composition, and age composition."
        ),
-       tex = TRUE
-       # file = "output/tables/table_t_econ_ideology.tex",
-       # replace = TRUE
+       tex = TRUE,
+       file = "output/tables/table_t_econ_ideology.tex",
+       replace = TRUE
 )
 
 # Q: If I add state-level fixed effects, does the entire thing go away?

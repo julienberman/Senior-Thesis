@@ -27,8 +27,11 @@ etable(model_economics_nat, model_economics_local,
        digits = 3,
        digits.stats = 3,
        signif.code = c("*" = .1, "**" = .05, "***" = .01),
+       fontsize = "small",
+       page.width = "fit",
        style.tex = style.tex("aer"),
        dict = c(
+         "t_econ_minus_culture" = "Net Economic Advertising",
          "unemp_local" = "Regional Unemployment",
          "unemp_nat" = "National Unemployment",
          "inflation" = "Inflation",
@@ -58,3 +61,30 @@ etable(model_economics_nat, model_economics_local,
        file = "output/tables/table_t_econ_economics.tex",
        replace = TRUE
 )
+
+# create economic local figure
+p <- ggplot(df_candidates_house, aes(x = unemp_local, y = t_econ_minus_culture)) +
+  # Add binned points with standard error bars
+  stat_summary_bin(fun.data = "mean_se", 
+                   bins = 20, 
+                   geom = "pointrange", 
+                   alpha = 0.8) +
+  # Add regression line
+  geom_smooth(method = "lm", 
+              se = TRUE, alpha = 0.2,
+              color = "blue") +
+  # Labels
+  scale_x_continuous(labels = function(x) paste0(x, "%")) +
+  labs(x = "Regional Unemployment",
+       y = "Net Economic Advertising") +
+  # Theme
+  theme_bw() +
+  theme(
+    panel.grid = element_blank(),
+    axis.title = element_text(face = "bold")
+  ) +
+  geom_vline(xintercept = 0, color = "black") + 
+  geom_hline(yintercept = 0, color = "black")
+  
+
+ggsave("output/tables/figure_t_econ_economics.png", p, width = 8, height = 6)

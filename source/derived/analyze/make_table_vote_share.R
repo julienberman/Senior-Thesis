@@ -65,8 +65,11 @@ etable(models,
        digits = 3,
        digits.stats = 3,
        signif.code = c("*" = .1, "**" = .05, "***" = .01),
+       fontsize = "small",
+       page.width = "fit",
        style.tex = style.tex("aer"),
        dict = c(
+         "vote_share" = "Vote Share",
          "t_econ_minus_culture" = "Net Economic Advertising",
          "cpr_favored" = "Favored by the CPR",
          "incumbentTRUE" = "Incumbent",
@@ -108,7 +111,7 @@ p <- ggplot(df_candidates_house, aes(x = t_econ_minus_culture, y = vote_share)) 
                    alpha = 0.8) +
   # Add regression line
   geom_smooth(method = "lm", 
-              se = FALSE, 
+              se = TRUE, alpha = 0.2,
               color = "blue") +
   # Add vertical line at x=0
   geom_vline(xintercept = 0, color = "black") +

@@ -11,14 +11,15 @@ df_candidates <- read_csv("source/raw_data/candidates.csv", locale = locale(enco
 df_candidates_aug <- read_csv("source/raw_data/candidates_aug.csv", locale = locale(encoding = "UTF-8"))
 df_presidents <- read_csv("source/raw_data/presidents.csv", locale = locale(encoding = "UTF-8"))
 df_cpr <- read_csv("source/raw_data/cpr_ratings.csv", locale = locale(encoding = "UTF-8"))
-df_cpr_aug <- read_csv("source/raw_data/cpr_ratings_aug.csv", local = locale(encoding = "UTF-8"))
+df_cpr_aug <- read_csv("source/raw_data/cpr_ratings_aug.csv", locale = locale(encoding = "UTF-8"))
 df_states <- read_csv("source/raw_data/state_codes.csv", locale = locale(encoding = "UTF-8"))
 df_econ <- read_csv("source/raw_data/econ_indicators.csv", locale = locale(encoding = "UTF-8"))
+df_dime <- read_csv("source/raw_data/dime_trunc.csv", local = locale(encoding = "UTF-8"))
 
 # set output directory
 output_dir <- "output/derived/clean"
 
-columns_candidates = c("race_id", "year", "race", "state2", "district2", "statedistrict", "census_division",	"census_region", "primary",
+columns_candidates = c("race_id", "id", "bonica.cid", "year", "race", "state2", "district2", "statedistrict", "census_division",	"census_region", "primary",
             "race_type", "name", "party", "status", "incumbent", "unopposed", "votes", "totalvotes", "voteshare", "win",
             "population", "share_male", "share_white", "share_black", "share_hisp", "share_other", "share_u18", "share_65plus",
             "log_income_per_capita", "unemprate",	"lfp", "universalism", "fb_connectedness",	"fb_bias", 
@@ -42,8 +43,14 @@ df_candidates <- df_candidates %>%
   # merge state codes 
   left_join(df_states, by = c("state2" = "state_num")) %>% 
   relocate(state, state_abbr, .after = race) %>% 
+  # merge gender & id information from the dime dataset
+  left_join(df_dime %>% select(bonica.rid, lname, ffname, gender, icpsr, id_fec), by = c("id" = "bonica.rid")) %>% 
   # rename columns
   rename(
+    id_bonica = id,
+    id_bonica_contrib = bonica.cid,
+    id_icpsr = icpsr,
+    surname = lname,
     state_code = state2,
     district_code = district2,
     state_district = statedistrict,
@@ -59,7 +66,7 @@ df_candidates <- df_candidates %>%
     total_party_contribs = total.party.contribs,
     total_contribs_from_candidate = total.contribs.from.candidate,
     dwnom = dwnom1,
-    vs_id = votesmart_id,
+    id_votesmart = votesmart_id,
     vs_econ_conservatism = economic_conservatism_average,
     vs_social_conservatism = social_conservatism_average,
     cfscore = recipient.cfscore,
@@ -99,10 +106,29 @@ df_candidates <- df_candidates %>%
     has_vs = ifelse(!is.na(vs_econ_conservatism), 1, 0),
     is_dem = ifelse(party == "democrat", 1, 0)
     ) %>% 
-  relocate(c("has_ads", "t_econ_minus_culture", "t_econ", "t_culture", "vs_econ_conservatism", "vs_social_conservatism", "cfscore", "dwdime", "dwnom", "n_airings", "n_videos"), .after = win) %>% 
-  relocate(is_dem, .after = party) %>% 
+  # predict race using last name
+  predict_race(surname.only = TRUE) %>% 
+  mutate(
+    pred_race = case_when(
+      pred.whi == pmax(pred.whi, pred.bla, pred.his, pred.asi, pred.oth, na.rm = TRUE) ~ "white",
+      pred.bla == pmax(pred.whi, pred.bla, pred.his, pred.asi, pred.oth, na.rm = TRUE) ~ "black",
+      pred.his == pmax(pred.whi, pred.bla, pred.his, pred.asi, pred.oth, na.rm = TRUE) ~ "hispanic",
+      pred.asi == pmax(pred.whi, pred.bla, pred.his, pred.asi, pred.oth, na.rm = TRUE) ~ "asian",
+      pred.oth == pmax(pred.whi, pred.bla, pred.his, pred.asi, pred.oth, na.rm = TRUE) ~ "other",
+      TRUE ~ NA_character_
+    ),
+    pred_race = ifelse(is.na(surname), NA, pred_race),
+    is_minority = ifelse(pred_race == "white", 0, 1)
+  ) %>% 
+  select(-c("pred.whi", "pred.bla", "pred.his", "pred.asi", "pred.oth")) %>% 
+  # relocate
+  relocate(c("has_ads", "has_vs", "t_econ_minus_culture", "t_econ", "t_culture", "vs_econ_conservatism", "vs_social_conservatism", "cfscore", "dwdime", "dwnom", "n_airings", "n_videos"), .after = win) %>% 
+  relocate(is_dem, .after = party) %>%
+  relocate(c("id_bonica", "id_bonica_contrib", "id_icpsr", "id_fec", "id_votesmart"), .after = race_id) %>% 
+  relocate(c("surname", "ffname", "gender", "pred_race", "is_minority"), .after = name) %>% 
   # sort
   arrange(factor(race, levels = c("president", "house", "senate", "governor")), year, state, district_code)
+
 
 # clean CPR dataset
 columns_cpr = c("Cycle", "Office", "dist_num", "State", "Rating", "EarlyRating")
