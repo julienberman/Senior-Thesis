@@ -13,21 +13,21 @@ df_candidates_house <- df_candidates %>%
 
 # relationship between economic messaging and political ideology
 
-model_ideology1 <- feols(t_econ_minus_culture ~ cfscore*is_dem + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus,
+model_ideology1 <- feols(t_econ_minus_culture ~ cfscore*is_dem + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus,
                          data = df_candidates_house,
-                         vcov = "hetero")
+                         vcov = "HC1")
 
-model_ideology2 <- feols(t_econ_minus_culture ~ dwnom*is_dem + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus,
+model_ideology2 <- feols(t_econ_minus_culture ~ dwnom*is_dem + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus,
                          data = df_candidates_house,
-                         vcov = "hetero")
+                         vcov = "HC1")
 
-model_ideology3 <- feols(t_econ_minus_culture ~ dwdime*is_dem + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus,
+model_ideology3 <- feols(t_econ_minus_culture ~ dwdime*is_dem + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus,
                          data = df_candidates_house,
-                         vcov = "hetero")
+                         vcov = "HC1")
 
-model_ideology4 <- feols(t_econ_minus_culture ~ vs_econ_conservatism*is_dem + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus,
+model_ideology4 <- feols(t_econ_minus_culture ~ vs_econ_conservatism*is_dem + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus,
                          data = df_candidates_house,
-                         vcov = "hetero")
+                         vcov = "HC1")
 
 # create ideology table
 etable(model_ideology1, model_ideology2, model_ideology3, model_ideology4,    
@@ -51,7 +51,8 @@ etable(model_ideology1, model_ideology2, model_ideology3, model_ideology4,
        drop = c("population", "share_white", "share_black", "share_hisp", "share_other", "share_u18", "share_65plus",
                 "Constant|Int"),
        # Add both groups in the fixed effects section
-       group = list("_Demographic Controls" = c("population", "share_white", "share_black", "share_hisp", "share_other", "share_u18", "share_65plus")),
+       group = list("_Candidate Demographic Controls" = c("is_female", "is_minority"),
+                    "_Demographic Controls" = c("population", "share_white", "share_black", "share_hisp", "share_other", "share_u18", "share_65plus")),
        # Add summary statistics
        fitstat = ~n + r2 + ar2,
        notes = paste0(

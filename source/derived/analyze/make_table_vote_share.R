@@ -15,35 +15,35 @@ df_candidates_house <- df_candidates %>%
 # base model
 model1 <- feols(vote_share ~ t_econ_minus_culture, 
                 data = df_candidates_house,
-                cluster = ~state_district)
+                vcov = "HC1")
 
 # district x year fixed effects and district x party fixed effects
 model2 <- feols(vote_share ~ t_econ_minus_culture | party^year + state_district^party, 
                 data = df_candidates_house,
                 cluster = ~state_district)
 
-# ... with district demographics
-model3 <- feols(vote_share ~ t_econ_minus_culture + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | party^year + state_district^party, 
+# ... with district demographics and candidate demographics
+model3 <- feols(vote_share ~ t_econ_minus_culture + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | party^year + state_district^party, 
                 data = df_candidates_house,
                 cluster = ~state_district)
 
-# ... with cpr favorability
-model4 <- feols(vote_share ~ t_econ_minus_culture + cpr_favored + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | party^year + state_district^party, 
+# ... with cpr favorability & incumbent
+model4 <- feols(vote_share ~ t_econ_minus_culture + cpr_favored + incumbent + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | party^year + state_district^party, 
                 data = df_candidates_house,
                 cluster = ~state_district)
 
 # ... with cpr favorability interaction
-model5 <- feols(vote_share ~ t_econ_minus_culture*cpr_favored + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | party^year + state_district^party, 
+model5 <- feols(vote_share ~ t_econ_minus_culture*cpr_favored + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | party^year + state_district^party, 
                 data = df_candidates_house,
                 cluster = ~state_district)
 
 # ... with incumbency interaction
-model6 <- feols(vote_share ~ t_econ_minus_culture*incumbent + cpr_favored + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | party^year + state_district^party, 
+model6 <- feols(vote_share ~ t_econ_minus_culture*incumbent + cpr_favored + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | party^year + state_district^party, 
                 data = df_candidates_house,
                 cluster = ~state_district)
 
 # ... with economic performance interaction
-model7 <- feols(vote_share ~ t_econ_minus_culture*unemp_local + cpr_favored + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | party^year + state_district^party, 
+model7 <- feols(vote_share ~ t_econ_minus_culture*unemp_local + cpr_favored + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | party^year + state_district^party, 
                 data = df_candidates_house,
                 cluster = ~state_district)
 
@@ -61,7 +61,7 @@ models <- list(
 
 # create table
 etable(models,     
-       title = "Impact of Economic Advertising on Vote Share in House Races (2000 - 2020)",
+       title = "Impact of Economic Advertising on Vote Share in House Races (2002 - 2022)",
        digits = 3,
        digits.stats = 3,
        signif.code = c("*" = .1, "**" = .05, "***" = .01),
@@ -84,7 +84,8 @@ etable(models,
        # Drop both sets of individual variables
        drop = c("population", "share_white", "share_black", "share_hisp", "share_other", "share_u18", "share_65plus"),
        # Add both groups in the fixed effects section
-       group = list("_Demographic Controls" = c("population", "share_white", "share_black", "share_hisp", "share_other", "share_u18", "share_65plus")),
+       group = list("_Candidate Demographic Controls" = c("is_female", "is_minority"),
+                    "_District Demographic Controls" = c("population", "share_white", "share_black", "share_hisp", "share_other", "share_u18", "share_65plus")),
        # Add summary statistics
        fitstat = ~n + r2 + ar2,
        notes = paste0(
@@ -94,7 +95,8 @@ etable(models,
          "Net Economic Advertising measures the difference between the share of economic and cultural content in candidate's advertising. ",
          "Favored by the CPR indicates districts rated as favoring the candidate's party by the Cook Political Report eight months prior to the election. ",
          "Incumbent indicates candidates previously in office. ",
-         "District demographic controls include population, racial composition, and age composition."
+         "Candidate demographic controls include gender and race. ",
+         "District demographic controls include population, racial composition, and age bracket."
        ),
        tex = TRUE,
        file = "output/tables/table_vote_share.tex",

@@ -79,6 +79,7 @@ df_candidates <- df_candidates %>%
     state_abbr = tolower(state_abbr),
     race = tolower(race),
     party = tolower(party),
+    gender = tolower(gender),
     status = tolower(status),
     incumbent = case_when(
         !is.na(status) & tolower(status) == "incumbent"  ~ TRUE,
@@ -118,14 +119,15 @@ df_candidates <- df_candidates %>%
       TRUE ~ NA_character_
     ),
     pred_race = ifelse(is.na(surname), NA, pred_race),
-    is_minority = ifelse(pred_race == "white", 0, 1)
+    is_minority = ifelse(pred_race == "white", 0, 1),
+    is_female = ifelse(gender == "m", 0, 1)
   ) %>% 
   select(-c("pred.whi", "pred.bla", "pred.his", "pred.asi", "pred.oth")) %>% 
   # relocate
   relocate(c("has_ads", "has_vs", "t_econ_minus_culture", "t_econ", "t_culture", "vs_econ_conservatism", "vs_social_conservatism", "cfscore", "dwdime", "dwnom", "n_airings", "n_videos"), .after = win) %>% 
   relocate(is_dem, .after = party) %>%
   relocate(c("id_bonica", "id_bonica_contrib", "id_icpsr", "id_fec", "id_votesmart"), .after = race_id) %>% 
-  relocate(c("surname", "ffname", "gender", "pred_race", "is_minority"), .after = name) %>% 
+  relocate(c("surname", "ffname", "gender", "is_female", "pred_race", "is_minority"), .after = name) %>% 
   # sort
   arrange(factor(race, levels = c("president", "house", "senate", "governor")), year, state, district_code)
 
@@ -217,7 +219,8 @@ df_candidates <- df_candidates %>%
         (cpr_rating_early %in% c("lean r", "likely r", "solid r") & party == "republican"), 
       1, 0)
   ) %>% 
-  relocate(starts_with("cpr_"), .before = population)
+  relocate(starts_with("cpr_"), .before = population) %>% 
+  filter(year >= 2002)
 
 # save clean data
 if (!dir.exists(output_dir)) {

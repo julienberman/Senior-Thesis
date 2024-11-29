@@ -13,11 +13,11 @@ df_candidates_house <- df_candidates %>%
 
 # Economics model
 
-model_economics_nat <- feols(t_econ_minus_culture ~ sw(unemp_local, unemp_nat, inflation, rdpi_growth, rgdppc_growth, ics) + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | state_district,
+model_economics_nat <- feols(t_econ_minus_culture ~ sw(unemp_local, unemp_nat, inflation, rdpi_growth, rgdppc_growth, ics) + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | state_district,
                              data = df_candidates_house,
                              cluster = ~state_district)
 
-model_economics_local <- feols(t_econ_minus_culture ~ unemp_local + unemp_nat + rgdppc_growth + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | state_district,
+model_economics_local <- feols(t_econ_minus_culture ~ unemp_local + unemp_nat + rgdppc_growth + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | state_district,
                                data = df_candidates_house,
                                cluster = ~state_district)
 
@@ -45,7 +45,8 @@ etable(model_economics_nat, model_economics_local,
        # Drop both sets of individual variables
        drop = c("population", "share_white", "share_black", "share_hisp", "share_other", "share_u18", "share_65plus"),
        # Add both groups in the fixed effects section
-       group = list("_Demographic Controls" = c("population", "share_white", "share_black", "share_hisp", "share_other", "share_u18", "share_65plus")),
+       group = list("_Candidate Demographic Controls" = c("is_female", "is_minority"),
+                    "_Demographic Controls" = c("population", "share_white", "share_black", "share_hisp", "share_other", "share_u18", "share_65plus")),
        # Add summary statistics
        fitstat = ~n + r2 + ar2,
        notes = paste0(
