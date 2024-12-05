@@ -13,16 +13,20 @@ df_candidates_house <- df_candidates %>%
 
 # Economics model
 
-model_economics_nat <- feols(t_econ_minus_culture ~ sw(unemp_local, unemp_nat, inflation, rdpi_growth, rgdppc_growth, ics) + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | state_district,
+model_economics_local <- feols(t_econ_minus_culture ~ unemp_local + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | state_district + year,
+                               data = df_candidates_house,
+                               cluster = ~state_district)
+
+model_economics_nat <- feols(t_econ_minus_culture ~ sw(unemp_nat, inflation, rdpi_growth, rgdppc_growth, ics) + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | state_district,
                              data = df_candidates_house,
                              cluster = ~state_district)
 
-model_economics_local <- feols(t_econ_minus_culture ~ unemp_local + unemp_nat + rgdppc_growth + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | state_district,
+model_economics_final <- feols(t_econ_minus_culture ~ unemp_local + unemp_nat + rgdppc_growth + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus | state_district,
                                data = df_candidates_house,
                                cluster = ~state_district)
 
 # create economics table
-etable(model_economics_nat, model_economics_local,    
+etable(model_economics_local, model_economics_nat, model_economics_final,    
        title = "Impact of Economic Conditions on Type of Political Messaging in House Races (2000 - 2020)",
        digits = 3,
        digits.stats = 3,
@@ -39,6 +43,7 @@ etable(model_economics_nat, model_economics_local,
          "rgdppc_growth" = "Growth in GDP Per Capita",
          "ics" = "Consumer Sentiment Index",
          "state_district" = "District",
+         "year" = "Year",
          "party^year" = "Year-Party",
          "state_district^party" = "District-Party"
        ),
@@ -50,42 +55,26 @@ etable(model_economics_nat, model_economics_local,
        # Add summary statistics
        fitstat = ~n + r2 + ar2,
        notes = paste0(
-         "\\footnotesize Notes: Standard errors clustered by congressional district in parentheses. ",
-         "* p < 0.1, ** p < 0.05, *** p < 0.01. ",
-         "The dependent variable is the candidate's vote share. ",
-         "Net Economic Advertising measures the difference between the share of economic and cultural content in candidate's advertising. ",
-         "Favored by the CPR indicates districts rated as favoring the candidate's party by the Cook Political Report eight months prior to the election. ",
-         "Incumbent indicates candidates previously in office. ",
-         "District demographic controls include population, racial composition, and age composition."
+         "\\footnotesize Notes:",
+         "* p < 0.1, ** p < 0.05, *** p < 0.01. "
        ),
        tex = TRUE,
        file = "output/tables/table_t_econ_economics.tex",
        replace = TRUE
 )
 
-# create economic local figure
-p <- ggplot(df_candidates_house, aes(x = unemp_local, y = t_econ_minus_culture)) +
-  # Add binned points with standard error bars
-  stat_summary_bin(fun.data = "mean_se", 
-                   bins = 20, 
-                   geom = "pointrange", 
-                   alpha = 0.8) +
-  # Add regression line
-  geom_smooth(method = "lm", 
-              se = TRUE, alpha = 0.2,
-              color = "blue") +
-  # Labels
-  scale_x_continuous(labels = function(x) paste0(x, "%")) +
-  labs(x = "Regional Unemployment",
-       y = "Net Economic Advertising") +
-  # Theme
+binscatter <- binsreg(x = df_candidates_house$unemp_local, y = df_candidates_house$t_econ_minus_culture, nbins = 40, bycolors = "black")
+
+p1 <- binscatter$bins_plot + 
+  geom_smooth(data = df_candidates_house, aes(x = unemp_local, y = t_econ_minus_culture), method = "lm", se = TRUE, alpha = 0.2,) + 
+  geom_vline(xintercept = 0, color = "black") +
+  geom_hline(yintercept = 0, color = "black") +
+  scale_x_continuous(limits = c(0, 15), labels = function(x) paste0(x, "%")) +
+  labs(x = "Regional Unemployment", y = "Net Economic Advertising") + 
   theme_bw() +
   theme(
     panel.grid = element_blank(),
     axis.title = element_text(face = "bold")
-  ) +
-  geom_vline(xintercept = 0, color = "black") + 
-  geom_hline(yintercept = 0, color = "black")
-  
+  )
 
-ggsave("output/tables/figure_t_econ_economics.png", p, width = 8, height = 6)
+ggsave("output/tables/figure_t_econ_economics.png", p1, width = 8, height = 6)

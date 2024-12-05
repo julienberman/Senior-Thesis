@@ -75,55 +75,49 @@ etable(model_ideology1, model_ideology2, model_ideology3, model_ideology4,
 
 
 # create cfscore figure
-p1 <- ggplot(df_candidates_house, aes(x = cfscore, y = t_econ_minus_culture, color = factor(is_dem))) +
-  # Add binned points with standard error bars
-  stat_summary_bin(fun.data = "mean_se", bins = 30,
-                   geom = "pointrange", alpha = 0.8) +
-  # Add regression lines with standard error bands
-  geom_smooth(method = "lm", se = TRUE, alpha = 0.2) +
-  # Customize colors
-  scale_color_manual(values = c("red", "blue"),
-                     labels = c("Republican", "Democrat"),
-                     name = NULL) +
-  # Labels
-  labs(x = "Campaign Finance Score",
-       y = "Net Economic Advertising"
-       ) +
-  # Theme
-  theme_bw() +
-  theme(
-      panel.grid = element_blank(),
-      axis.title = element_text(face = "bold")
-    ) + 
+binscatter_1 <- binsreg(x = df_candidates_house$cfscore, 
+                      y = df_candidates_house$t_econ_minus_culture, 
+                      nbins = 40, 
+                      by = df_candidates_house$is_dem,
+                      bycolors = c("red", "blue"),
+                      bysymbols = c(19, 19))
+
+p1 <- binscatter_1$bins_plot + 
+  geom_smooth(data = df_candidates_house, aes(x = cfscore, y = t_econ_minus_culture, color = factor(is_dem)), method = "lm", se = TRUE, alpha = 0.2,) + 
   geom_vline(xintercept = 0, color = "black") +
-  geom_hline(yintercept = 0, color = "black")
-
-ggsave("output/tables/figure_t_econ_ideology_cfscore.png", p1, width = 8, height = 6)
-
-
-# create votesmart figure
-p2 <- ggplot(df_candidates_house, aes(x = vs_econ_conservatism, y = t_econ_minus_culture, color = factor(is_dem))) +
-  # Add binned points with standard error bars
-  stat_summary_bin(fun.data = "mean_se", bins = 30,
-                   geom = "pointrange", alpha = 0.8) +
-  # Add regression lines with standard error bands
-  geom_smooth(method = "lm", se = TRUE, alpha = 0.2) +
-  # Customize colors
-  scale_color_manual(values = c("red", "blue"),
-                     labels = c("Republican", "Democrat"),
-                     name = NULL) +
-  # Labels
-  labs(x = "VoteSmart Economic Conservatism Rating",
-       y = "Net Economic Advertising"
-  ) +
-  # Theme
+  labs(x = "Campaign Finance Score", y = "Net Economic Advertising") + 
   theme_bw() +
   theme(
     panel.grid = element_blank(),
     axis.title = element_text(face = "bold")
   ) + 
+  scale_color_manual(values = c("red", "blue"),
+                     labels = c("Republican", "Democrat"),
+                     name = NULL)
+
+ggsave("output/tables/figure_t_econ_ideology_cfscore.png", p1, width = 8, height = 6)
+
+
+# create votesmart figure
+binscatter_2 <- binsreg(x = df_candidates_house$vs_econ_conservatism, 
+                        y = df_candidates_house$t_econ_minus_culture, 
+                        nbins = 40, 
+                        by = df_candidates_house$is_dem,
+                        bycolors = c("red", "blue"),
+                        bysymbols = c(19, 19))
+
+p2 <- binscatter_2$bins_plot + 
+  geom_smooth(data = df_candidates_house, aes(x = vs_econ_conservatism, y = t_econ_minus_culture, color = factor(is_dem)), method = "lm", se = TRUE, alpha = 0.2) + 
   geom_vline(xintercept = 0, color = "black") +
-  geom_hline(yintercept = 0, color = "black")
+  labs(x = "VoteSmart Economic Conservatism Rating", y = "Net Economic Advertising") + 
+  theme_bw() +
+  theme(
+    panel.grid = element_blank(),
+    axis.title = element_text(face = "bold")
+  ) + 
+  scale_color_manual(values = c("red", "blue"),
+                     labels = c("Republican", "Democrat"),
+                     name = NULL)
 
 ggsave("output/tables/figure_t_econ_ideology_votesmart.png", p2, width = 8, height = 6)
 

@@ -1,6 +1,7 @@
 # Install and load required packages
 
 packages <- c(
+  "binsreg",
   "broom",
   "car",
   "caret",

@@ -120,11 +120,12 @@ df_candidates <- df_candidates %>%
     ),
     pred_race = ifelse(is.na(surname), NA, pred_race),
     is_minority = ifelse(pred_race == "white", 0, 1),
-    is_female = ifelse(gender == "m", 0, 1)
+    is_female = ifelse(gender == "m", 0, 1),
+    z_econ_minus_culture = as.numeric(scale(t_econ_minus_culture))
   ) %>% 
   select(-c("pred.whi", "pred.bla", "pred.his", "pred.asi", "pred.oth")) %>% 
   # relocate
-  relocate(c("has_ads", "has_vs", "t_econ_minus_culture", "t_econ", "t_culture", "vs_econ_conservatism", "vs_social_conservatism", "cfscore", "dwdime", "dwnom", "n_airings", "n_videos"), .after = win) %>% 
+  relocate(c("has_ads", "has_vs", "t_econ_minus_culture", "z_econ_minus_culture", "t_econ", "t_culture", "vs_econ_conservatism", "vs_social_conservatism", "cfscore", "dwdime", "dwnom", "n_airings", "n_videos"), .after = win) %>% 
   relocate(is_dem, .after = party) %>%
   relocate(c("id_bonica", "id_bonica_contrib", "id_icpsr", "id_fec", "id_votesmart"), .after = race_id) %>% 
   relocate(c("surname", "ffname", "gender", "is_female", "pred_race", "is_minority"), .after = name) %>% 

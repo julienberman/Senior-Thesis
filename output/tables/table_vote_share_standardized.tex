@@ -1,0 +1,45 @@
+
+\begin{table}[htbp]
+   \caption{Impact of Economic Advertising on Vote Share in House Races (2002 - 2022)}
+   \bigskip
+   \centering
+   \small
+   \begin{tabular}{lccccccc}
+      \toprule
+       & \multicolumn{7}{c}{Vote Share}\\
+                                                    & (1)           & (2)           & (3)           & (4)           & (5)           & (6)           & (7)\\  
+      \midrule 
+      Constant                                      & 0.513$^{***}$ &               &               &               &               &               &   \\   
+                                                    & (0.002)       &               &               &               &               &               &   \\   
+      Net Economic Advertising (Standardized)       & 0.013$^{***}$ & 0.009$^{***}$ & 0.009$^{***}$ & 0.004$^{**}$  & 0.003         & 0.005$^{*}$   & -0.001\\   
+                                                    & (0.003)       & (0.002)       & (0.003)       & (0.002)       & (0.002)       & (0.003)       & (0.004)\\   
+      Favored by the CPR                            &               &               &               & 0.060$^{***}$ & 0.093$^{***}$ & 0.060$^{***}$ & 0.094$^{***}$\\   
+                                                    &               &               &               & (0.006)       & (0.006)       & (0.006)       & (0.006)\\   
+      Incumbent                                     &               &               &               & 0.053$^{***}$ &               & 0.053$^{***}$ &   \\   
+                                                    &               &               &               & (0.006)       &               & (0.006)       &   \\   
+      Net Economic Advertising × Favored            &               &               &               &               & 0.004         &               &   \\   
+                                                    &               &               &               &               & (0.004)       &               &   \\   
+      Net Economic Advertising × Incumbent          &               &               &               &               &               & -0.0006       &   \\   
+                                                    &               &               &               &               &               & (0.004)       &   \\   
+      Local Unemployment Rate                       &               &               &               &               &               &               & -0.002\\   
+                                                    &               &               &               &               &               &               & (0.002)\\   
+      Net Economic Advertising × Local Unemployment &               &               &               &               &               &               & 0.001$^{*}$\\   
+                                                    &               &               &               &               &               &               & (0.0006)\\   
+       \\
+      Standard-Errors & Heteroskedasticity-robust & \multicolumn{6}{c}{Clustered by District} \\ 
+      Observations                                  & 2,594         & 2,594         & 2,591         & 2,591         & 2,591         & 2,591         & 2,591\\  
+      R$^2$                                         & 0.013         & 0.683         & 0.686         & 0.776         & 0.757         & 0.776         & 0.757\\  
+      Adjusted R$^2$                                & 0.012         & 0.563         & 0.564         & 0.689         & 0.663         & 0.689         & 0.663\\  
+      Candidate Demographic Controls                &               &               & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$\\   
+      District Demographic Controls                 &               &               & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$\\   
+       \\
+      Year-Party fixed effects                      &               & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$\\   
+      District-Party fixed effects                  &               & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$  & $\checkmark$\\   
+      \bottomrule
+   \end{tabular}
+   
+   \par \raggedright 
+   \footnotesize Notes: Standard errors clustered by congressional district in parentheses. * p < 0.1, ** p < 0.05, *** p < 0.01. The dependent variable is the candidate's vote share. Net Economic Advertising measures the difference between the share of economic and cultural content in candidate's advertising. Favored by the CPR indicates districts rated as favoring the candidate's party by the Cook Political Report eight months prior to the election. Incumbent indicates candidates previously in office. Candidate demographic controls include gender and race. District demographic controls include population, racial composition, and age bracket.
+\end{table}
+
+
