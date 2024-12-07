@@ -11,6 +11,25 @@ df_candidates <- read_csv("output/derived/clean/candidates_clean.csv", locale = 
 df_candidates_house <- df_candidates %>% 
   filter(race_type == "gen" & has_ads == "1" & has_vs == 1 & race == "house")
 
+
+df_candidates <- df_candidates %>% 
+  mutate(vs_total = vs_econ_conservatism + vs_social_conservatism)
+
+model_test <- feols(t_econ_minus_culture ~ vs_total + vs_econ_conservatism^2,
+                    data = df_candidates_house,
+                    vcov = "HC1")
+
+
+df_candidates %>%
+  filter(year > 2018) %>%
+  ggplot(aes(x = vs_econ_conservatism, y = t_econ_minus_culture)) +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), color = "black") +
+  geom_point(aes(color = factor(is_dem))) +
+  scale_color_manual(values = c("0" = "red", "1" = "blue"), 
+                     labels = c("0" = "Republican", "1" = "Democrat"),
+                     name = "Party")
+
+
 # relationship between economic messaging and political ideology
 
 model_ideology1 <- feols(t_econ_minus_culture ~ cfscore*is_dem + is_female + is_minority + population + share_white + share_black + share_hisp + share_other + share_u18 + share_65plus,
