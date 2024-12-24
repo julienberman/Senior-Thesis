@@ -1,0 +1,12 @@
+name: political-advertising
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - numpy
+  - pandas
+  - scikit-learn
+  - matplotlib
+  - r-base
+  - r-ggplot2
