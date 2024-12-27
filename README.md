@@ -51,6 +51,11 @@ micromamba create -f source/lib/environment.yml
 micromamba activate political-advertising
 ```
 
+- To update the environment:
+```bash
+micromamba install -f source/lib/environment.yml
+```
+
 For pip users:
 - Ensure you have Python installed (version 3.10 or higher)
 

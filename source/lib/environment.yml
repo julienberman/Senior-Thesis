@@ -13,3 +13,5 @@ dependencies:
   - matplotlib
   - r-base
   - r-ggplot2
+  - pip:
+    - ratelimit
