@@ -2,7 +2,7 @@ name: political-advertising
 channels:
   - conda-forge
 dependencies:
-  - python=3.12
+  - python=3.11
   - pip
   - ipykernel
   - jupyter
@@ -14,4 +14,7 @@ dependencies:
   - r-base
   - r-ggplot2
   - pip:
+    - torch
+    - sentence-transformers
     - ratelimit
+    - linktransformer
